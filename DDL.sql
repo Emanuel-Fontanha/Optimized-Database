@@ -1,22 +1,21 @@
 CREATE TABLE Empresa (
     id_empresa INT PRIMARY KEY,
-    nome_empresa VARCHAR(50) NOT NULL,
+    nome_empresa VARCHAR(50) UNIQUE NOT NULL,
     nome_fantasia VARCHAR(50)
 );
 
 CREATE TABLE Conversao (
-    moeda VARCHAR(5) PRIMARY KEY,
-    nome_moeda VARCHAR(15) NOT NULL,
+    sigla_moeda VARCHAR(5) PRIMARY KEY,
+    nome_sigla_moeda VARCHAR(15) UNIQUE NOT NULL,
     fator_conver_to_dolar NUMERIC(10,4) NOT NULL
 );
 
 CREATE TABLE Pais (
     ddi INT PRIMARY KEY,
-    nome_pais VARCHAR(50) NOT NULL,
-    moeda VARCHAR(10) NOT NULL,
+    nome_pais VARCHAR(50) UNIQUE NOT NULL,
+    sigla_moeda VARCHAR(10) NOT NULL,
 
-    CONSTRAINT fk_sigla_moeda FOREIGN KEY (moeda)
-        REFERENCES Conversao(moeda)
+    FOREIGN KEY (sigla_moeda) REFERENCES Conversao(sigla_moeda)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
@@ -26,6 +25,7 @@ CREATE TABLE EmpresaPais (
     ddi_pais_origem INT,
     id_nacional VARCHAR(50),
 
+    CONSTRAINT unq_empresa_em_pais UNIQUE(ddi_pais_origem, id_nacional),
     CONSTRAINT fk_empresa_em_pais PRIMARY KEY (id_empresa, ddi_pais_origem),
     FOREIGN KEY (id_empresa) REFERENCES Empresa(id_empresa)
         ON DELETE CASCADE
@@ -37,7 +37,7 @@ CREATE TABLE EmpresaPais (
 
 CREATE TABLE Plataforma (
     id_plataforma INT PRIMARY KEY,
-    nome_plataforma VARCHAR(50) NOT NULL,
+    nome_plataforma VARCHAR(50) UNIQUE NOT NULL,
     id_empresa_fund INT,
     id_empresa_respo INT,
     data_fundacao DATE,
@@ -57,7 +57,7 @@ CREATE TABLE Usuario (
     nick VARCHAR(50) PRIMARY KEY,
     email VARCHAR(100) UNIQUE NOT NULL,
     data_nasc DATE NOT NULL,
-    telefone VARCHAR(20) NOT NULL,
+    telefone VARCHAR(20) UNIQUE NOT NULL,
     end_postal VARCHAR(150),
     ddi_pais_residencia INT,
 
@@ -72,6 +72,7 @@ CREATE TABLE PlataformaUsuario (
     nick_usuario VARCHAR(50),
     numero_usuario INT NOT NULL,
 
+    CONSTRAINT unq_usuario_em_plat UNIQUE (id_plataforma, numero_usuario),
     CONSTRAINT pk_usuario_em_plat PRIMARY KEY (id_plataforma, nick_usuario),
     FOREIGN KEY (id_plataforma) REFERENCES Plataforma(id_plataforma)
         ON DELETE CASCADE
@@ -86,6 +87,7 @@ CREATE TABLE StreamerPais (
     ddi_pais_origem INT,
     nro_passaporte VARCHAR(30) NOT NULL,
 
+    CONSTRAINT unq_streamer_pais UNIQUE (ddi_pais_origem, nro_passaporte),
     CONSTRAINT pk_streamer_pais PRIMARY KEY (nick_streamer, ddi_pais_origem),
     FOREIGN KEY (nick_streamer) REFERENCES Usuario(nick)
         ON DELETE CASCADE
@@ -125,6 +127,7 @@ CREATE TABLE NivelCanal (
     gif VARCHAR(200) NOT NULL,
     
     CHECK (nivel BETWEEN 1 AND 5),
+    CONSTRAINT unq_nome_nvl_canal UNIQUE (nome_canal, id_plataforma, nome_nivel),
     CONSTRAINT pk_nivel_canal PRIMARY KEY (nome_canal, id_plataforma, nivel),
     CONSTRAINT fk_nivel_canal FOREIGN KEY (nome_canal, id_plataforma)
         REFERENCES Canal(nome, id_plataforma)
@@ -179,6 +182,7 @@ CREATE TABLE Video (
     visus_simultaneas INT DEFAULT 0,
     visus_totais INT DEFAULT 0,
 
+    CONSTRAINT unq_titulo UNIQUE (nome_canal, id_plataforma, titulo),
     CONSTRAINT pk_video
         PRIMARY KEY (nome_canal, id_plataforma, titulo, data_hora),
     CONSTRAINT fk_canal_video
@@ -234,12 +238,6 @@ CREATE TABLE Comentario (
         ON UPDATE CASCADE
 )
 
-/*
-    SOBRE DOAÇÃO: se eu identifico o Comentário, eu já identifico o Vídeo por traceback, não?
-    R: sim, identifica. Trazer os dados duplicados de Vídeo e Comentário garante consultas menores e mais simples, porém, requer FKs sólidas para garantir a integridade.
-    PERGUNTAR AO BEDO SOBRE NORMALIZAÇÃO - violação da 2FN.
-*/
-
 CREATE TABLE Doacao (
     nome_canal VARCHAR(50),
     id_plataforma INT,
@@ -252,6 +250,7 @@ CREATE TABLE Doacao (
     status_doacao VARCHAR(10) NOT NULL,
 
     CHECK (status_doacao IN ('recusado','recebido','lido')),
+    CONSTRAINT unq_id_doacao UNIQUE (id_comentario, id_doacao)
     CONSTRAINT pk_doacao
         PRIMARY KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao),
     CONSTRAINT fk_coment_doacao
@@ -269,7 +268,7 @@ CREATE TABLE DoacaoBitcoin (
     nick_usuario VARCHAR(50),
     id_comentario INT,
     id_doacao INT,
-    txid VARCHAR(256) NOT NULL,
+    txid VARCHAR(256) UNIQUE NOT NULL,
 
     CONSTRAINT pk_doac_bitcoin
         PRIMARY KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao),
@@ -288,7 +287,7 @@ CREATE TABLE DoacaoPaypal (
     nick_usuario VARCHAR(50),
     id_comentario INT,
     id_doacao INT,
-    id_paypal VARCHAR(100) NOT NULL,
+    id_paypal VARCHAR(100) UNIQUE NOT NULL,
 
     CONSTRAINT pk_doac_paypal
         PRIMARY KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao),
@@ -307,9 +306,9 @@ CREATE TABLE DoacaoCartao (
     nick_usuario VARCHAR(50),
     id_comentario INT,
     id_doacao INT,
-    numero_cartao VARCHAR(20) NOT NULL,
+    numero_cartao VARCHAR(20) UNIQUE NOT NULL,
     bandeira VARCHAR(30) NOT NULL,
-    data_transacao TIMESTAMP NOT NULL
+    data_transacao TIMESTAMP NOT NULL,
 
     CONSTRAINT pk_doac_cartao
         PRIMARY KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao),
@@ -328,7 +327,7 @@ CREATE TABLE DoacaoMecanismoPlat (
     nick_usuario VARCHAR(50),
     id_comentario INT,
     id_doacao INT,
-    seq_plataforma INT NOT NULL
+    seq_plataforma INT UNIQUE NOT NULL,
 
     CONSTRAINT pk_doac_mec_plat
         PRIMARY KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao),
