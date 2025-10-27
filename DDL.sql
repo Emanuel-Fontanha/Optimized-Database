@@ -190,7 +190,7 @@ CREATE TABLE Video (
         REFERENCES Canal(nome, id_plataforma)
         ON DELETE CASCADE
         ON UPDATE CASCADE
-)
+);
 
 CREATE TABLE Colaboracao (
     nome_canal VARCHAR(50),
@@ -211,7 +211,7 @@ CREATE TABLE Colaboracao (
         REFERENCES Usuario(nick)
         ON DELETE CASCADE
         ON UPDATE CASCADE
-)
+);
 
 CREATE TABLE Comentario (
     nome_canal VARCHAR(50),
@@ -225,7 +225,7 @@ CREATE TABLE Comentario (
     is_online BOOLEAN,
 
     CONSTRAINT pk_comentario
-        PRIMARY KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, id_comentario),
+        PRIMARY KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario),
     CONSTRAINT fk_video_comentado
         FOREIGN KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid)
         REFERENCES Video(nome_canal, id_plataforma, titulo, data_hora)
@@ -236,7 +236,7 @@ CREATE TABLE Comentario (
         REFERENCES Usuario(nick)
         ON DELETE CASCADE
         ON UPDATE CASCADE
-)
+);
 
 CREATE TABLE Doacao (
     nome_canal VARCHAR(50),
@@ -250,7 +250,7 @@ CREATE TABLE Doacao (
     status_doacao VARCHAR(10) NOT NULL,
 
     CHECK (status_doacao IN ('recusado','recebido','lido')),
-    CONSTRAINT unq_id_doacao UNIQUE (id_comentario, id_doacao)
+    CONSTRAINT unq_id_doacao UNIQUE (id_comentario, id_doacao),
     CONSTRAINT pk_doacao
         PRIMARY KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao),
     CONSTRAINT fk_coment_doacao
