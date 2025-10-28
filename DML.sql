@@ -1,4 +1,7 @@
 ---------------------------------------------------------------------------------------
+
+--  USAMOS UM GERADOR AUTOMÁTICO PORQUE INSERIR MANUALMENTE AS TUPLAS SERIA INVIÁVEL --
+
 ---------------------------------------------------------------------------------------
 
 INSERT INTO Empresa (id_empresa, nome_empresa, nome_fantasia)
