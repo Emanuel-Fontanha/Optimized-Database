@@ -155,11 +155,18 @@ CROSS JOIN generate_series(1,5) AS s(i);
 ---------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------
 
-INSERT INTO Doacao (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao, valor, status_doacao)
-SELECT c.nome_canal, c.id_plataforma, c.titulo_video, c.data_hora_vid, c.nick_usuario, c.id_comentario, i, ROUND((random()*1000)::numeric,2),
-    CASE WHEN i%3=0 THEN 'recusado' WHEN i%3=1 THEN 'recebido' ELSE 'lido' END
+INSERT INTO Doacao (nome_canal, id_plataforma, titulo_video, data_hora_vid,
+                    nick_usuario, id_comentario, id_doacao, valor, status_doacao)
+SELECT c.nome_canal, c.id_plataforma, c.titulo_video,c.data_hora_vid, c.nick_usuario,c.id_comentario,
+    ROW_NUMBER() OVER (PARTITION BY c.id_comentario ORDER BY random()) AS id_doacao,
+    ROUND((random()*1000)::numeric,2),
+    CASE WHEN random() < 0.33 THEN 'recusado'
+        WHEN random() < 0.66 THEN 'recebido'
+        ELSE 'lido'
+    END AS status_doacao
 FROM Comentario c
-CROSS JOIN generate_series(1,1) AS s(i);
+CROSS JOIN generate_series(1,3) AS s(i);
+
 
 ---------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------
