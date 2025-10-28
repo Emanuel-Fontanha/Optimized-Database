@@ -6,7 +6,7 @@ CREATE TABLE Empresa (
 
 CREATE TABLE Conversao (
     sigla_moeda VARCHAR(5) PRIMARY KEY,
-    nome_moeda VARCHAR(20) UNIQUE NOT NULL,
+    nome_moeda VARCHAR(20) NOT NULL,
     fator_conver_to_dolar NUMERIC(10,4) NOT NULL
 );
 
