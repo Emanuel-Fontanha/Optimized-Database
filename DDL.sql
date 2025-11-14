@@ -6,14 +6,14 @@ CREATE TABLE Empresa (
 
 CREATE TABLE Conversao (
     sigla_moeda VARCHAR(5) PRIMARY KEY,
-    nome_moeda VARCHAR(20) NOT NULL,
+    nome_moeda VARCHAR(30) NOT NULL,
     fator_conver_to_dolar NUMERIC(10,4) NOT NULL
 );
 
 CREATE TABLE Pais (
     ddi INT PRIMARY KEY,
     nome_pais VARCHAR(50) UNIQUE NOT NULL,
-    sigla_moeda VARCHAR(10) NOT NULL,
+    sigla_moeda VARCHAR(5) NOT NULL,
 
     FOREIGN KEY (sigla_moeda) REFERENCES Conversao(sigla_moeda)
         ON DELETE CASCADE
@@ -327,8 +327,9 @@ CREATE TABLE DoacaoMecanismoPlat (
     nick_usuario VARCHAR(50),
     id_comentario INT,
     id_doacao INT,
-    seq_plataforma INT UNIQUE NOT NULL,
+    seq_plataforma INT NOT NULL,
 
+    CONSTRAINT unq_sequencial UNIQUE (id_plataforma, nick_usuario, id_comentario, seq_plataforma),
     CONSTRAINT pk_doac_mec_plat
         PRIMARY KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao),
     CONSTRAINT fk_doac_mec_plat
