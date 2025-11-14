@@ -121,15 +121,23 @@ SELECT
     c.nome,
     c.id_plataforma,
     'Video ' || g,
-    NOW() - (RANDOM() * INTERVAL '365 days'),
+    make_timestamp(
+        2010 + (g % 10),
+        1 + ((floor(random() * 1000)::int + g) % 12),
+        1 + ((floor(random() * 2000)::int + g) % 28),
+        (floor(random() * 24)::int),
+        (floor(random() * 60)::int),
+        (floor(random() * 60)::int)
+    ),
     'Tema ' || (RANDOM()*50)::int,
     (10 + (RANDOM()*590))::int || 'min',
     (RANDOM()*5000)::int,
     (RANDOM()*200000)::int
-FROM Canal c,
-    generate_series(1, 1000) g
-ORDER BY RANDOM()
+FROM Canal c
+CROSS JOIN generate_series(1, 1000) g
+ORDER BY random()
 LIMIT 1000;
+
 
 
 INSERT INTO Colaboracao (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_streamer)
