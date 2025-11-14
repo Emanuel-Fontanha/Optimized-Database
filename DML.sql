@@ -1,205 +1,270 @@
----------------------------------------------------------------------------------------
+INSERT INTO Conversao (sigla_moeda, nome_moeda, fator_conver_to_dolar)
+SELECT 
+    'M' || LPAD(i::text, 4, '0') AS sigla_moeda,
+    'Moeda_' || i AS nome_moeda,
+    ROUND((RANDOM() * 10 + 0.5)::NUMERIC, 4) AS fator_conver_to_dolar
+FROM generate_series(1, 1000) AS s(i);
 
---  USAMOS UM GERADOR AUTOMÁTICO PORQUE INSERIR MANUALMENTE AS TUPLAS SERIA INVIÁVEL --
-
----------------------------------------------------------------------------------------
 
 INSERT INTO Empresa (id_empresa, nome_empresa, nome_fantasia)
-SELECT i,
-    'Empresa_' || i,
-    'Fantasia_' || i
-FROM generate_series(1,100) AS s(i);
+SELECT 
+    i AS id_empresa,
+    'Empresa_' || i AS nome_empresa,
+    'Fantasia_' || i AS nome_fantasia
+FROM generate_series(1, 1000) AS s(i);
 
----------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------
-
-INSERT INTO Conversao (sigla_moeda, nome_moeda, fator_conver_to_dolar)
-SELECT 'M' || i,
-    'Moeda_' || i,
-    ROUND((0.5 + random()*5)::numeric,4)
-FROM generate_series(1,100) AS s(i);
-
----------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------
 
 INSERT INTO Pais (ddi, nome_pais, sigla_moeda)
-SELECT i,
-    'Pais_' || i,
-    'M' || i
-FROM generate_series(1,100) AS s(i);
+SELECT 
+    i AS ddi,
+    'Pais_' || i AS nome_pais,
+    'M' || LPAD((1 + floor(random() * 1000))::text, 4, '0') AS sigla_moeda
+FROM generate_series(1, 1000) AS s(i);
 
----------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------
 
 INSERT INTO EmpresaPais (id_empresa, ddi_pais_origem, id_nacional)
-SELECT e.id_empresa, p.ddi, 'IDNAC_' || e.id_empresa || '_' || p.ddi
-FROM Empresa e
-JOIN Pais p ON p.ddi = e.id_empresa;
+SELECT
+    i AS id_empresa,
+    i AS ddi_pais_origem,
+    'NAC_' || i AS id_nacional
+FROM generate_series(1, 1000) AS s(i);
 
----------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------
 
 INSERT INTO Plataforma (id_plataforma, nome_plataforma, id_empresa_fund, id_empresa_respo, data_fundacao, qtd_usuarios)
-SELECT i,
-    'Plataforma_' || i,
-    (i % 100) + 1,
-    ((i+50) % 100) + 1,
-    date '2015-01-01' + (i || ' days')::interval,
-    (random()*10000)::int
-FROM generate_series(1,100) AS s(i);
+SELECT
+    i AS id_plataforma,
+    'Plataforma_' || i AS nome_plataforma,
+    (1 + floor(random() * 1000))::int AS id_empresa_fund,
+    (1 + floor(random() * 1000))::int AS id_empresa_respo,
+    -- data aleatória entre 1980 e 2023
+    date '1980-01-01' + (floor(random() * 16000))::int AS data_fundacao,
+    (1000 + floor(random() * 10000000))::int AS qtd_usuarios
+FROM generate_series(1, 1000) AS s(i);
 
----------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------
 
 INSERT INTO Usuario (nick, email, data_nasc, telefone, end_postal, ddi_pais_residencia)
-SELECT 'usuario_' || i,
-    'usuario_' || i || '@teste.com',
-    date '1980-01-01' + ((i*30) || ' days')::interval,
-    '55' || (100000000+i),
-    'Endereco ' || i,
-    (i % 100) + 1
-FROM generate_series(1,100) AS s(i);
+SELECT
+    'user_' || i AS nick,
+    'user_' || i || '@exemplo.com' AS email,
+    -- datas de nascimento entre 1960 e 2010
+    date '1960-01-01' + (floor(random() * 18250))::int AS data_nasc,
+    '+55-' || LPAD(i::text, 4, '0') AS telefone,
+    'Endereco_' || i AS end_postal,
+    (1 + floor(random() * 1000))::int AS ddi_pais_residencia
+FROM generate_series(1, 1000) AS s(i);
 
----------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------
 
-WITH usuarios_num AS (
-    SELECT nick, ROW_NUMBER() OVER () AS numero_usuario
-    FROM Usuario
-)
 INSERT INTO PlataformaUsuario (id_plataforma, nick_usuario, numero_usuario)
-SELECT p.id_plataforma, u.nick, u.numero_usuario
-FROM Plataforma p
-JOIN usuarios_num u ON u.numero_usuario = p.id_plataforma;
+SELECT
+    i AS id_plataforma,
+    'user_' || i AS nick_usuario,
+    i AS numero_usuario
+FROM generate_series(1, 1000) AS s(i);
 
----------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------
 
 INSERT INTO StreamerPais (nick_streamer, ddi_pais_origem, nro_passaporte)
-SELECT u.nick, u.ddi_pais_residencia, 'PASS_' || u.nick
-FROM Usuario u
-LIMIT 100;
+SELECT
+    'user_' || i AS nick_streamer,
+    i AS ddi_pais_origem,
+    'PASS_' || i AS nro_passaporte
+FROM generate_series(1, 1000) AS s(i);
 
----------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------
 
 INSERT INTO Canal (nome, id_plataforma, nick_streamer, tipo, data_inicio, descricao, qtd_visualizacoes)
-SELECT 'Canal_' || i,
-    (i % 100) + 1,
-    'usuario_' || ((i % 100) + 1),
-    CASE WHEN i%3=0 THEN 'privado' WHEN i%3=1 THEN 'publico' ELSE 'misto' END,
-    date '2020-01-01' + (i || ' days')::interval,
-    'Descricao do canal ' || i,
-    (random()*100000)::int
-FROM generate_series(1,100) AS s(i);
+SELECT
+    'Canal_' || i AS nome,
+    i AS id_plataforma,
+    'user_' || i AS nick_streamer,
+    (ARRAY['publico','privado','misto'])[1 + floor(random() * 3)] AS tipo,
+    date '2000-01-01' + (floor(random() * 9000))::int AS data_inicio,
+    'Descricao do canal ' || i AS descricao,
+    (floor(random() * 10000000))::int AS qtd_visualizacoes
+FROM generate_series(1, 1000) AS s(i);
 
----------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------
 
 INSERT INTO NivelCanal (nome_canal, id_plataforma, nivel, nome_nivel, valor, gif)
-SELECT c.nome, c.id_plataforma, n, 'Nivel_' || n, ROUND((random()*100)::numeric,2), 'http://gif.com/' || n
-FROM Canal c
-CROSS JOIN generate_series(1,5) AS s(n);
+SELECT
+    'Canal_' || i AS nome_canal,
+    i AS id_plataforma,
+    1 AS nivel,
+    'Nivel_1' AS nome_nivel,
+    (5 + random() * 45)::numeric(10,2) AS valor,
+    'gif_nivel_1_canal_' || i || '.gif' AS gif
+FROM generate_series(1, 1000) AS s(i);
 
-
----------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------
 
 INSERT INTO Patrocinio (id_empresa, nome_canal, id_plataforma, valor)
-SELECT ((i-1) % 100) + 1, c.nome, c.id_plataforma, ROUND((random()*10000)::numeric,2)
+SELECT 
+    (SELECT id_empresa FROM Empresa ORDER BY RANDOM() LIMIT 1),
+    c.nome,
+    c.id_plataforma,
+    ROUND((RANDOM() * 9000 + 1000)::numeric, 2)
 FROM Canal c
-CROSS JOIN generate_series(1,1) AS s(i);
+ORDER BY RANDOM()
+LIMIT 1000;
 
----------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------
 
 INSERT INTO Inscricao (nome_canal, id_plataforma, nick_membro, nivel)
-SELECT c.nome, c.id_plataforma, u.nick, ((i-1)%5 + 1)
-FROM Canal c
-JOIN Usuario u ON u.nick = 'usuario_' || ((c.id_plataforma % 100) + 1)
-CROSS JOIN generate_series(1,1) AS s(i);
+SELECT 
+    n.nome_canal,
+    n.id_plataforma,
+    u.nick,
+    n.nivel
+FROM NivelCanal n
+JOIN Usuario u ON TRUE
+ORDER BY RANDOM()
+LIMIT 1000;
 
----------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------
 
 INSERT INTO Video (nome_canal, id_plataforma, titulo, data_hora, tema, duracao, visus_simultaneas, visus_totais)
-SELECT c.nome, c.id_plataforma, 'Video_' || i,
-    now() - ((i*10) || ' days')::interval,
-    'Tema_' || i,
-    ((i%60)+1) || 'min',
-    (random()*1000)::int,
-    (random()*5000)::int
-FROM Canal c
-CROSS JOIN generate_series(1,1) AS s(i);
+SELECT
+    c.nome,
+    c.id_plataforma,
+    'Video ' || g,
+    NOW() - (RANDOM() * INTERVAL '365 days'),
+    'Tema ' || (RANDOM()*50)::int,
+    (10 + (RANDOM()*590))::int || 'min',
+    (RANDOM()*5000)::int,
+    (RANDOM()*200000)::int
+FROM Canal c,
+    generate_series(1, 1000) g
+ORDER BY RANDOM()
+LIMIT 1000;
 
----------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------
 
 INSERT INTO Colaboracao (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_streamer)
-SELECT v.nome_canal, v.id_plataforma, v.titulo, v.data_hora, s.nick_streamer
+SELECT 
+    v.nome_canal,
+    v.id_plataforma,
+    v.titulo,
+    v.data_hora,
+    u.nick
 FROM Video v
-JOIN StreamerPais s ON s.ddi_pais_origem = ((v.id_plataforma % 100)+1)
-LIMIT 100;
+JOIN Usuario u ON TRUE
+ORDER BY RANDOM()
+LIMIT 1000;
 
----------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------
 
+WITH 
+    vids AS (SELECT * FROM Video ORDER BY RANDOM() LIMIT 1000),
+    users AS (SELECT nick FROM Usuario ORDER BY RANDOM() LIMIT 1000)
 INSERT INTO Comentario (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, texto, data_hora_postagem, is_online)
-SELECT v.nome_canal, v.id_plataforma, v.titulo, v.data_hora, u.nick, i, 'Comentario ' || i,
-    now() - ((i*2) || ' days')::interval,
-    (i%2=0)
-FROM Video v
-JOIN Usuario u ON u.nick = 'usuario_' || ((v.id_plataforma % 100)+1)
-CROSS JOIN generate_series(1,5) AS s(i);
+SELECT 
+    v.nome_canal,
+    v.id_plataforma,
+    v.titulo,
+    v.data_hora,
+    u.nick,
+    row_number() OVER () AS id_comentario,
+    'Comentario auto',
+    NOW() - (RANDOM()*INTERVAL '60 days'),
+    RANDOM() > 0.5
+FROM vids v
+JOIN users u ON v.id_plataforma = v.id_plataforma
+ORDER BY RANDOM()
+LIMIT 1000;
 
----------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------
 
-INSERT INTO Doacao (nome_canal, id_plataforma, titulo_video, data_hora_vid,
-                    nick_usuario, id_comentario, id_doacao, valor, status_doacao)
-SELECT c.nome_canal, c.id_plataforma, c.titulo_video,c.data_hora_vid, c.nick_usuario,c.id_comentario,
-    ROW_NUMBER() OVER (PARTITION BY c.id_comentario ORDER BY random()) AS id_doacao,
-    ROUND((random()*1000)::numeric,2),
-    CASE WHEN random() < 0.33 THEN 'recusado'
-        WHEN random() < 0.66 THEN 'recebido'
-        ELSE 'lido'
+INSERT INTO Doacao (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao, valor, status_doacao)
+SELECT
+    c.nome_canal,
+    c.id_plataforma,
+    c.titulo_video,
+    c.data_hora_vid,
+    c.nick_usuario,
+    c.id_comentario,
+    gs AS id_doacao,
+    ROUND(((RANDOM() * 200)::numeric) + 1, 2) AS valor,
+    CASE
+        WHEN r < 0.33 THEN 'recusado'
+        WHEN r < 0.66 THEN 'lido'
+        ELSE 'recebido'
     END AS status_doacao
-FROM Comentario c
-CROSS JOIN generate_series(1,3) AS s(i);
+FROM (
+    SELECT
+        nome_canal, id_plataforma, titulo_video, data_hora_vid,
+        nick_usuario, id_comentario,
+        (
+            ('x' ||
+            substr(md5(random()::text), 1, 8)
+            )::bit(32)::bigint
+            / 4294967295.0     -- normaliza para [0,1)
+        ) AS r
+
+    FROM Comentario
+    ORDER BY RANDOM()
+    LIMIT 1000
+) c
+JOIN generate_series(1, 1) gs ON true;
 
 
----------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------
-
-INSERT INTO DoacaoBitcoin (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao, txid)
-SELECT d.nome_canal, d.id_plataforma, d.titulo_video, d.data_hora_vid, d.nick_usuario, d.id_comentario, d.id_doacao,
-    md5(random()::text)
+INSERT INTO DoacaoBitcoin (
+    nome_canal, id_plataforma, titulo_video, data_hora_vid,
+    nick_usuario, id_comentario, id_doacao, txid
+)
+SELECT 
+    d.nome_canal, d.id_plataforma, d.titulo_video, d.data_hora_vid,
+    d.nick_usuario, d.id_comentario, d.id_doacao,
+    md5(random()::text || clock_timestamp()::text)
 FROM Doacao d
-LIMIT 100;
+ORDER BY RANDOM()
+LIMIT 400;
 
----------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------
 
-INSERT INTO DoacaoPaypal (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao, id_paypal)
-SELECT d.nome_canal, d.id_plataforma, d.titulo_video, d.data_hora_vid, d.nick_usuario, d.id_comentario, d.id_doacao,
-    'paypal_' || d.id_doacao
+INSERT INTO DoacaoPaypal (
+    nome_canal, id_plataforma, titulo_video, data_hora_vid,
+    nick_usuario, id_comentario, id_doacao, id_paypal
+)
+SELECT 
+    d.nome_canal, d.id_plataforma, d.titulo_video, d.data_hora_vid,
+    d.nick_usuario, d.id_comentario, d.id_doacao,
+    'PAYPAL-' || md5(random()::text)
 FROM Doacao d
-LIMIT 100;
+ORDER BY RANDOM()
+LIMIT 400;
 
----------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------
 
-INSERT INTO DoacaoCartao (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao, numero_cartao, bandeira, data_transacao)
-SELECT d.nome_canal, d.id_plataforma, d.titulo_video, d.data_hora_vid, d.nick_usuario, d.id_comentario, d.id_doacao,
-    '400000000000' || (d.id_doacao % 1000), 'Visa', now()
+INSERT INTO DoacaoCartao (
+    nome_canal, id_plataforma, titulo_video, data_hora_vid,
+    nick_usuario, id_comentario, id_doacao,
+    numero_cartao, bandeira, data_transacao
+)
+SELECT 
+    d.nome_canal, d.id_plataforma, d.titulo_video, d.data_hora_vid,
+    d.nick_usuario, d.id_comentario, d.id_doacao,
+    LPAD((RANDOM()*1e16)::bigint::text, 16, '0'),
+    (ARRAY['Visa','Mastercard','Elo','Amex'])[floor(random()*4)+1],
+    NOW() - RANDOM() * INTERVAL '30 days'
 FROM Doacao d
-LIMIT 100;
+ORDER BY RANDOM()
+LIMIT 400;
 
----------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------
 
+WITH random_doacoes AS (
+    SELECT 
+        d.nome_canal,
+        d.id_plataforma,
+        d.titulo_video,
+        d.data_hora_vid,
+        d.nick_usuario,
+        d.id_comentario,
+        d.id_doacao,
+        ROW_NUMBER() OVER (
+            PARTITION BY d.id_plataforma, d.nick_usuario, d.id_comentario
+            ORDER BY random()
+        ) AS seq_plataforma
+    FROM Doacao d
+    ORDER BY random()
+    LIMIT 400
+)
 INSERT INTO DoacaoMecanismoPlat (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao, seq_plataforma)
-SELECT d.nome_canal, d.id_plataforma, d.titulo_video, d.data_hora_vid, d.nick_usuario, d.id_comentario, d.id_doacao,
-    d.id_doacao
-FROM Doacao d
-LIMIT 100;
+SELECT
+    nome_canal,
+    id_plataforma,
+    titulo_video,
+    data_hora_vid,
+    nick_usuario,
+    id_comentario,
+    id_doacao,
+    seq_plataforma
+FROM random_doacoes;
