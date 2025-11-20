@@ -92,15 +92,35 @@ SELECT
     'gif_nivel_1_canal_' || i || '.gif' AS gif
 FROM generate_series(1, 1000) AS s(i);
 
-
+-- inserir em Patrocínio
+WITH emp AS (
+    SELECT id_empresa,
+           row_number() OVER (ORDER BY random()) AS ern,
+           (SELECT count(*) FROM Empresa) AS total_emp
+    FROM Empresa
+),
+     can AS (
+         SELECT nome, id_plataforma,
+                row_number() OVER (ORDER BY random()) AS crn
+         FROM Canal
+     ),
+     pair AS (
+         SELECT
+             can.nome,
+             can.id_plataforma,
+             emp.id_empresa
+         FROM can
+                  JOIN emp
+                       ON ((can.crn - 1) % emp.total_emp) + 1 = emp.ern
+     )
 INSERT INTO Patrocinio (id_empresa, nome_canal, id_plataforma, valor)
-SELECT 
-    (SELECT id_empresa FROM Empresa ORDER BY RANDOM() LIMIT 1),
-    c.nome,
-    c.id_plataforma,
+SELECT
+    p.id_empresa,
+    p.nome,
+    p.id_plataforma,
     ROUND((RANDOM() * 9000 + 1000)::numeric, 2)
-FROM Canal c
-ORDER BY RANDOM()
+FROM pair p
+ORDER BY random()
 LIMIT 1000;
 
 
