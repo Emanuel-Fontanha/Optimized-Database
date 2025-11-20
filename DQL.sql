@@ -14,8 +14,7 @@ SELECT
     COUNT(DISTINCT I.nome_canal) AS qtd_canais_membro,
     DATE_TRUNC('month', V.data_hora) AS mes_referencia,
     SUM(D.valor) AS total_desembolsado
-FROM
-    Usuario U
+FROM Usuario U
         INNER JOIN Inscricao I
                    ON U.nick = I.nick_membro
         LEFT JOIN Doacao D
@@ -31,8 +30,7 @@ ORDER BY U.nick, mes_referencia;
 
 ------------------------------ terceira consulta ----------------------------
 SELECT D.nome_canal, D.id_plataforma, SUM(D.valor) AS total_recebido
-FROM
-    Doacao D
+FROM Doacao D
         JOIN Canal C
              ON D.nome_canal = C.nome
                  AND D.id_plataforma = C.id_plataforma
@@ -68,7 +66,17 @@ ORDER BY total_patrocinio DESC
 LIMIT :k;
 
 ------------------------------ sexta consulta ----------------------------
-
+SELECT D.nome_canal, D.id_plataforma, SUM(D.valor) AS total_recebido
+FROM Doacao D
+         JOIN Video V
+              ON D.nome_canal = V.nome_canal
+                  AND D.id_plataforma = V.id_plataforma
+                  AND D.titulo_video = V.titulo
+                  AND D.data_hora_vid = V.data_hora
+WHERE D.status_doacao = 'recebido'
+GROUP BY D.nome_canal, D.id_plataforma
+ORDER BY total_recebido DESC
+LIMIT :k;
 
 ------------------------------ setima consulta  ----------------------------
 SELECT D.nome_canal, D.id_plataforma, SUM(D.valor) AS total_recebido
@@ -85,27 +93,18 @@ ORDER BY total_recebido DESC
 LIMIT :k;
 
 ------------------------------ Oitava consulta  ----------------------------
-SELECT
-    resultado.nome_canal,
-    resultado.id_plataforma,
-    SUM(resultado.faturamento) AS faturamento_total
+SELECT resultado.nome_canal, resultado.id_plataforma, SUM(resultado.faturamento) AS faturamento_total
 FROM (
 
-         -- 1) Receita de patrocínios
-         SELECT
-             p.nome_canal,
-             p.id_plataforma,
-             SUM(p.valor) AS faturamento
+         -- Receita de patrocínios
+         SELECT p.nome_canal, p.id_plataforma, SUM(p.valor) AS faturamento
          FROM Patrocinio p
          GROUP BY p.nome_canal, p.id_plataforma
 
          UNION ALL
 
-         -- 2) Receita de membros (inscrições vigentes)
-         SELECT
-             i.nome_canal,
-             i.id_plataforma,
-             SUM(n.valor) AS faturamento
+         -- Receita de membros (inscrições vigentes)
+         SELECT i.nome_canal, i.id_plataforma, SUM(n.valor) AS faturamento
          FROM Inscricao i
                   JOIN NivelCanal n
                        ON i.nome_canal = n.nome_canal
@@ -115,19 +114,14 @@ FROM (
 
          UNION ALL
 
-         -- 3) Receita de doações recebidas
-         SELECT
-             d.nome_canal,
-             d.id_plataforma,
-             SUM(d.valor) AS faturamento
+         -- Receita de doações recebidas
+         SELECT d.nome_canal, d.id_plataforma, SUM(d.valor) AS faturamento
          FROM Doacao d
          WHERE d.status_doacao = 'recebido'
          GROUP BY d.nome_canal, d.id_plataforma
 
      ) AS resultado
-GROUP BY
-    resultado.nome_canal,
-    resultado.id_plataforma
-ORDER BY
-    faturamento_total DESC
+GROUP BY resultado.nome_canal, resultado.id_plataforma
+ORDER BY faturamento_total DESC
 LIMIT 100;
+
