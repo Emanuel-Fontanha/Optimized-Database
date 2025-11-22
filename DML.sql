@@ -173,23 +173,32 @@ ORDER BY RANDOM()
 LIMIT 1000;
 
 
-WITH 
-    vids AS (SELECT * FROM Video ORDER BY RANDOM() LIMIT 1000),
-    users AS (SELECT nick FROM Usuario ORDER BY RANDOM() LIMIT 1000)
-INSERT INTO Comentario (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, texto, data_hora_postagem, is_online)
-SELECT 
+WITH
+    vids AS (
+        SELECT *, ROW_NUMBER() OVER () AS rn
+        FROM (SELECT * FROM Video ORDER BY RANDOM() LIMIT 1000) v
+    ),
+    users AS (
+        SELECT nick, ROW_NUMBER() OVER () AS rn
+        FROM (SELECT nick FROM Usuario ORDER BY RANDOM() LIMIT 1000) u
+    )
+INSERT INTO Comentario (
+    nome_canal, id_plataforma, titulo_video, data_hora_vid,
+    nick_usuario, id_comentario, texto, data_hora_postagem, is_online
+)
+SELECT
     v.nome_canal,
     v.id_plataforma,
     v.titulo,
     v.data_hora,
     u.nick,
-    row_number() OVER () AS id_comentario,
+    ROW_NUMBER() OVER () AS id_comentario,
     'Comentario auto',
-    NOW() - (RANDOM()*INTERVAL '60 days'),
-    RANDOM() > 0.5
+    NOW() - (random() * INTERVAL '60 days'),
+    random() > 0.5
 FROM vids v
-JOIN users u ON v.id_plataforma = v.id_plataforma
-ORDER BY RANDOM()
+         JOIN users u ON v.rn = u.rn
+ORDER BY random()
 LIMIT 1000;
 
 
