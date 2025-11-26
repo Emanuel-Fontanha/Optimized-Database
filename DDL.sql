@@ -119,8 +119,6 @@ CREATE TABLE EmpresaPais (
         ON UPDATE CASCADE
 );
 
--- NÃO MEXER DAQUI PRA CIMA
-
 CREATE TABLE Canal (
     nome VARCHAR(50),
     id_plataforma INT,
@@ -181,21 +179,24 @@ CREATE TABLE Inscricao (
     nome_canal VARCHAR(50),
     id_plataforma INT,
     nick_membro VARCHAR(50),
+    id_usuario BIGINT, --nick_membro removido já que foi criado ID
     nivel INT,
 
     CHECK (nivel BETWEEN 1 AND 5),
     CONSTRAINT pk_inscricao
-        PRIMARY KEY (nome_canal, id_plataforma, nick_membro),
+        PRIMARY KEY (nome_canal, id_plataforma, id_usuario),
     CONSTRAINT fk_nvl_canal_inscr
         FOREIGN KEY (nome_canal, id_plataforma, nivel)
         REFERENCES NivelCanal(nome_canal, id_plataforma, nivel)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
-    CONSTRAINT fk_usuario_inscr FOREIGN KEY (nick_membro)
-        REFERENCES Usuario(nick)
+    CONSTRAINT fk_usuario_inscr FOREIGN KEY (nick_membro, id_usuario)
+        REFERENCES Usuario(nick, id_usuario)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
+
+-- NÃO MEXER DAQUI PRA CIMA
 
 CREATE TABLE Video (
     id_video BIGINT, -- NOVO
@@ -368,91 +369,7 @@ CREATE TABLE DoacaoMecanismoPlat (
 );
 
 
-
-
 ---------------------------------------------------------------------------------------------------------------------------------
-
-
-
-
-
-
-CREATE TABLE Canal (
-    nome VARCHAR(50),
-    id_plataforma INT,
-    tipo VARCHAR(7),
-    data_inicio DATE NOT NULL,
-    descricao VARCHAR(200),
-    qtd_visualizacoes INT DEFAULT 0,
-    nick_streamer VARCHAR(50),
-    CHECK (tipo IN ('privado','publico','misto')),
-    CONSTRAINT pk_canal PRIMARY KEY (nome, id_plataforma),
-    CONSTRAINT fk_plataforma_canal FOREIGN KEY (id_plataforma)
-        REFERENCES Plataforma(id_plataforma)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-    CONSTRAINT fk_streamer_canal FOREIGN KEY (nick_streamer)
-        REFERENCES Usuario(nick)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
-
-CREATE TABLE Patrocinio (
-    id_empresa INT,
-    nome_canal VARCHAR(50),
-    id_plataforma INT,
-    valor NUMERIC(10,2) NOT NULL,
-
-    CHECK (valor > 0),
-    CONSTRAINT pk_patrocinio PRIMARY KEY (id_empresa, nome_canal, id_plataforma),
-    CONSTRAINT fk_empresa_patrocinadora FOREIGN KEY (id_empresa)
-        REFERENCES Empresa(id_empresa)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-    CONSTRAINT fk_canal_patrocinado FOREIGN KEY (nome_canal, id_plataforma)
-        REFERENCES Canal(nome, id_plataforma)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
-
-
-CREATE TABLE NivelCanal (
-    nome_canal VARCHAR(50),
-    id_plataforma INT,
-    nivel INT,
-    nome_nivel VARCHAR(20) NOT NULL, -- Criado para identificar por texto
-    valor NUMERIC(10,2) NOT NULL,
-    gif VARCHAR(200) NOT NULL,
-
-    CHECK (nivel BETWEEN 1 AND 5),
-    CONSTRAINT pk_nivel_canal PRIMARY KEY (nome_canal, id_plataforma, nivel),
-    CONSTRAINT unq_nome_nvl_canal UNIQUE (nome_canal, id_plataforma, nome_nivel),
-    CONSTRAINT fk_nivel_canal FOREIGN KEY (nome_canal, id_plataforma)
-        REFERENCES Canal(nome, id_plataforma)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
-
-CREATE TABLE Inscricao (
-    nome_canal VARCHAR(50),
-    id_plataforma INT,
-    id_usuario BIGINT, --nick_membro removido já que foi criado ID
-    nivel INT,
-
-    CHECK (nivel BETWEEN 1 AND 5),
-    CONSTRAINT pk_inscricao
-        PRIMARY KEY (nome_canal, id_plataforma, id_usuario),
-    CONSTRAINT fk_nvl_canal_inscr
-        FOREIGN KEY (nome_canal, id_plataforma, nivel)
-            REFERENCES NivelCanal(nome_canal, id_plataforma, nivel)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE,
-    CONSTRAINT fk_usuario_inscr
-        FOREIGN KEY (id_usuario)
-            REFERENCES Usuario(id_usuario)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE
-);
 
 
 CREATE TABLE Video (
@@ -515,6 +432,7 @@ CREATE TABLE Comentario (
             ON DELETE CASCADE
             ON UPDATE CASCADE
 );
+
 CREATE TABLE Doacao (
     id_doacao BIGINT PRIMARY KEY,
     id_comentario BIGINT NOT NULL,
