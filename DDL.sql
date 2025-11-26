@@ -119,6 +119,8 @@ CREATE TABLE EmpresaPais (
         ON UPDATE CASCADE
 );
 
+-- NÃO MEXER DAQUI PRA CIMA
+
 CREATE TABLE Canal (
     nome VARCHAR(50),
     id_plataforma INT,
