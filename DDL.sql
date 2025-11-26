@@ -1,21 +1,31 @@
 CREATE TABLE Empresa (
-    id_empresa INT PRIMARY KEY,
-    nome_empresa VARCHAR(50) UNIQUE NOT NULL,
-    nome_fantasia VARCHAR(50)
+	id_empresa INT,
+	nome_empresa VARCHAR(50) NOT NULL,
+	nome_fantasia VARCHAR(50),
+
+    PRIMARY KEY id_empresa,
+    UNIQUE nome_empresa
 );
 
 CREATE TABLE Conversao (
-    sigla_moeda VARCHAR(5) PRIMARY KEY,
-    nome_moeda VARCHAR(30) NOT NULL,
-    fator_conver_to_dolar NUMERIC(10,4) NOT NULL
+    id_moeda INT, --NOVO
+	sigla_moeda VARCHAR(5),
+	nome_moeda VARCHAR(30) NOT NULL,
+	fator_conver_to_dolar NUMERIC(10,4) NOT NULL,
+
+    CHECK (fator_conver_to_dolar > 0),
+    PRIMARY KEY id_moeda
 );
 
 CREATE TABLE Pais (
-    ddi INT PRIMARY KEY,
-    nome_pais VARCHAR(50) UNIQUE NOT NULL,
-    sigla_moeda VARCHAR(5) NOT NULL,
-
-    FOREIGN KEY (sigla_moeda) REFERENCES Conversao(sigla_moeda)
+	ddi INT,
+	nome_pais VARCHAR(50) NOT NULL,
+	sigla_moeda VARCHAR(5) NOT NULL,
+    
+    CHECK (ddi > 0),
+    PRIMARY KEY ddi,
+    UNIQUE nome_pais,
+	FOREIGN KEY (sigla_moeda) REFERENCES Conversao (sigla_moeda)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
@@ -25,8 +35,8 @@ CREATE TABLE EmpresaPais (
     ddi_pais_origem INT,
     id_nacional VARCHAR(50),
 
-    CONSTRAINT unq_empresa_em_pais UNIQUE(ddi_pais_origem, id_nacional),
-    CONSTRAINT fk_empresa_em_pais PRIMARY KEY (id_empresa, ddi_pais_origem),
+    PRIMARY KEY (id_empresa, ddi_pais_origem),
+    UNIQUE (ddi_pais_origem, id_nacional),
     FOREIGN KEY (id_empresa) REFERENCES Empresa(id_empresa)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
@@ -36,13 +46,15 @@ CREATE TABLE EmpresaPais (
 );
 
 CREATE TABLE Plataforma (
-    id_plataforma INT PRIMARY KEY,
-    nome_plataforma VARCHAR(50) UNIQUE NOT NULL,
+    id_plataforma INT,
+    nome_plataforma VARCHAR(50) NOT NULL,
     id_empresa_fund INT,
     id_empresa_respo INT,
-    data_fundacao DATE,
+    data_fundacao DATE NOT NULL,
     qtd_usuarios INT NOT NULL,
 
+    PRIMARY KEY id_plataforma,
+    UNIQUE nome_plataforma,
     CONSTRAINT fk_empr_fund_platf FOREIGN KEY (id_empresa_fund)
         REFERENCES Empresa(id_empresa)
         ON DELETE SET NULL
@@ -54,13 +66,18 @@ CREATE TABLE Plataforma (
 );
 
 CREATE TABLE Usuario (
-    nick VARCHAR(50) PRIMARY KEY,
-    email VARCHAR(100) UNIQUE NOT NULL,
+    id_usuario BIGINT, --NOVO
+    nick VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL,
     data_nasc DATE NOT NULL,
-    telefone VARCHAR(20) UNIQUE NOT NULL,
+    telefone VARCHAR(20) NOT NULL,
     end_postal VARCHAR(150),
     ddi_pais_residencia INT,
 
+    UNIQUE email,
+    UNIQUE telefone,
+    UNIQUE nick,
+    PRIMARY KEY id_usuario,
     CONSTRAINT fk_pais_usuario FOREIGN KEY (ddi_pais_residencia)
         REFERENCES Pais(ddi)
         ON DELETE SET NULL
@@ -68,28 +85,31 @@ CREATE TABLE Usuario (
 );
 
 CREATE TABLE PlataformaUsuario (
+    id_usuario BIGINT,
     id_plataforma INT,
-    nick_usuario VARCHAR(50),
     numero_usuario INT NOT NULL,
+    nick_usuario VARCHAR(50) NOT NULL,
 
-    CONSTRAINT unq_usuario_em_plat UNIQUE (id_plataforma, numero_usuario),
-    CONSTRAINT pk_usuario_em_plat PRIMARY KEY (id_plataforma, nick_usuario),
+    CONSTRAINT pk_usuario_em_plat PRIMARY KEY (id_usuario, id_plataforma),
     FOREIGN KEY (id_plataforma) REFERENCES Plataforma(id_plataforma)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
-    FOREIGN KEY (nick_usuario) REFERENCES Usuario(nick)
+    CONSTRAINT fk_usuario_em_plat FOREIGN KEY (id_usuario, nick_usuario)
+        REFERENCES Usuario(id_usuario, nick)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
 
 CREATE TABLE StreamerPais (
+    id_streamer BIGINT,
     nick_streamer VARCHAR(50),
     ddi_pais_origem INT,
     nro_passaporte VARCHAR(30) NOT NULL,
 
+    CONSTRAINT pk_streamer_pais PRIMARY KEY (id_streamer, ddi_pais_origem),
     CONSTRAINT unq_streamer_pais UNIQUE (ddi_pais_origem, nro_passaporte),
-    CONSTRAINT pk_streamer_pais PRIMARY KEY (nick_streamer, ddi_pais_origem),
-    FOREIGN KEY (nick_streamer) REFERENCES Usuario(nick)
+    CONSTRAINT fk_streamer_pais FOREIGN KEY (id_streamer, nick_streamer)
+        REFERENCES Usuario(id_usuario, nick)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     FOREIGN KEY (ddi_pais_origem) REFERENCES Pais(ddi)
@@ -102,7 +122,7 @@ CREATE TABLE Canal (
     id_plataforma INT,
     nick_streamer VARCHAR(50),
     tipo VARCHAR(7),
-    data_inicio DATE,
+    data_inicio DATE NOT NULL,
     descricao VARCHAR(200),
     qtd_visualizacoes INT DEFAULT 0,
 
@@ -127,8 +147,8 @@ CREATE TABLE NivelCanal (
     gif VARCHAR(200) NOT NULL,
     
     CHECK (nivel BETWEEN 1 AND 5),
-    CONSTRAINT unq_nome_nvl_canal UNIQUE (nome_canal, id_plataforma, nome_nivel),
     CONSTRAINT pk_nivel_canal PRIMARY KEY (nome_canal, id_plataforma, nivel),
+    CONSTRAINT unq_nome_nvl_canal UNIQUE (nome_canal, id_plataforma, nome_nivel),
     CONSTRAINT fk_nivel_canal FOREIGN KEY (nome_canal, id_plataforma)
         REFERENCES Canal(nome, id_plataforma)
         ON DELETE CASCADE
@@ -141,6 +161,7 @@ CREATE TABLE Patrocinio (
     id_plataforma INT,
     valor NUMERIC(10,2) NOT NULL,
 
+    CHECK (valor > 0),
     CONSTRAINT pk_patrocinio PRIMARY KEY (id_empresa, nome_canal, id_plataforma),
     CONSTRAINT fk_empresa_patrocinadora FOREIGN KEY (id_empresa)
         REFERENCES Empresa(id_empresa)
@@ -173,6 +194,7 @@ CREATE TABLE Inscricao (
 );
 
 CREATE TABLE Video (
+    id_video BIGINT, -- NOVO
     nome_canal VARCHAR(50),
     id_plataforma INT,
     titulo VARCHAR (50),
@@ -184,7 +206,7 @@ CREATE TABLE Video (
 
     CONSTRAINT unq_titulo UNIQUE (nome_canal, id_plataforma, titulo),
     CONSTRAINT pk_video
-        PRIMARY KEY (nome_canal, id_plataforma, titulo, data_hora),
+        PRIMARY KEY (id_plataforma, id_video), -- NOVO
     CONSTRAINT fk_canal_video
         FOREIGN KEY (nome_canal, id_plataforma)
         REFERENCES Canal(nome, id_plataforma)
@@ -193,6 +215,7 @@ CREATE TABLE Video (
 );
 
 CREATE TABLE Colaboracao (
+    id_video BIGINT, -- NOVO
     nome_canal VARCHAR(50),
     id_plataforma INT,
     titulo_video VARCHAR (50),
@@ -200,10 +223,10 @@ CREATE TABLE Colaboracao (
     nick_streamer VARCHAR(50),
 
     CONSTRAINT pk_colab
-        PRIMARY KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_streamer),
-    CONSTRAINT fk_video_colab
-        FOREIGN KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid)
-        REFERENCES Video(nome_canal, id_plataforma, titulo, data_hora)
+        PRIMARY KEY (id_plataforma, id_video, nick_streamer), -- NOVO
+    CONSTRAINT fk_video_colab -- NOVO
+        FOREIGN KEY (nome_canal, id_plataforma, id_video, titulo_video, data_hora_vid)
+        REFERENCES Video(nome_canal, id_plataforma, id_video, titulo, data_hora)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CONSTRAINT fk_streamer_colab
@@ -214,6 +237,7 @@ CREATE TABLE Colaboracao (
 );
 
 CREATE TABLE Comentario (
+    id_video BIGINT, -- NOVO
     nome_canal VARCHAR(50),
     id_plataforma INT,
     titulo_video VARCHAR (50),
@@ -225,10 +249,10 @@ CREATE TABLE Comentario (
     is_online BOOLEAN,
 
     CONSTRAINT pk_comentario
-        PRIMARY KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario),
-    CONSTRAINT fk_video_comentado
-        FOREIGN KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid)
-        REFERENCES Video(nome_canal, id_plataforma, titulo, data_hora)
+        PRIMARY KEY (id_plataforma, id_video, nick_usuario, id_comentario), -- NOVO
+    CONSTRAINT fk_video_comentado -- NOVO
+        FOREIGN KEY (nome_canal, id_plataforma, id_video, titulo_video, data_hora_vid)
+        REFERENCES Video(nome_canal, id_plataforma, id_video, titulo, data_hora)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CONSTRAINT fk_usuario_coment
