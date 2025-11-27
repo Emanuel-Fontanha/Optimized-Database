@@ -1,5 +1,4 @@
 -- INSERTS
-
 INSERT INTO Empresa (id_empresa, nome_empresa, nome_fantasia)
 SELECT
     gs AS id_empresa,
@@ -149,3 +148,205 @@ FROM canais c
          JOIN usuarios u
               ON random() < 0.002   -- ~0.2% dos usuários se inscrevem no canal
 LIMIT 20000;
+
+WITH canal_list AS (
+    SELECT
+                ROW_NUMBER() OVER () AS rn,
+                nome,
+                id_plataforma
+    FROM Canal
+)
+INSERT INTO Video (
+    id_video, nome_canal, id_plataforma,
+    titulo, data_hora, tema, duracao,
+    visus_simultaneas, visus_totais
+)
+SELECT
+    gs AS id_video,
+    c.nome AS nome_canal,
+    c.id_plataforma AS id_plataforma,
+    'Video_' || gs || '_' || c.rn AS titulo,   -- garante UNIQUE por canal
+    (TIMESTAMP '2020-01-01' + (gs % 2000) * INTERVAL '1 hour') AS data_hora,
+    (ARRAY['Esporte','Música','Tecnologia','Educação','Entretenimento'])[1 + (gs % 5)] AS tema,
+    (FLOOR(random() * 120) + 1)::text || ' min' AS duracao,
+    (FLOOR(random() * 5000))::int AS visus_simultaneas,
+    (FLOOR(random() * 1000000))::int AS visus_totais
+FROM generate_series(1, 100000) gs
+         JOIN canal_list c
+              ON c.rn = ((gs - 1) % (SELECT COUNT(*) FROM Canal)) + 1;
+
+WITH vid AS (
+    SELECT
+        id_video,
+        id_plataforma,
+        ROW_NUMBER() OVER () AS rn
+    FROM Video
+),
+     stre AS (
+         SELECT
+             nick,
+             ROW_NUMBER() OVER () AS rn
+         FROM Usuario
+     ),
+     selected_videos AS (
+         SELECT *
+         FROM vid
+         WHERE rn % 5 = 0
+     )
+INSERT INTO Colaboracao (id_video, id_plataforma, nick_streamer)
+SELECT
+    v.id_video,
+    v.id_plataforma,
+    s.nick
+FROM selected_videos v
+         JOIN LATERAL (
+    SELECT nick
+    FROM stre
+    WHERE rn BETWEEN 1 AND (SELECT COUNT(*) FROM stre)
+    ORDER BY random()
+    LIMIT ((v.rn % 3) + 1)
+    ) s ON TRUE;
+
+WITH
+    videos AS (
+        SELECT
+                    ROW_NUMBER() OVER () AS rn,
+                    id_plataforma,
+                    id_video
+        FROM Video
+    ),
+    usuarios AS (
+        SELECT
+                    ROW_NUMBER() OVER () AS rn,
+                    nick
+        FROM Usuario
+    ),
+    tot AS (
+        SELECT
+            (SELECT COUNT(*) FROM videos) AS total_videos,
+            (SELECT COUNT(*) FROM usuarios) AS total_users
+    )
+INSERT INTO Comentario (
+    id_comentario,
+    id_plataforma,
+    id_video,
+    nick_usuario,
+    texto,
+    data_hora_postagem,
+    is_online
+)
+SELECT
+    gs AS id_comentario,
+    v.id_plataforma,
+    v.id_video,
+    u.nick,
+    'Comentário #' || gs AS texto,
+    NOW() - (gs || ' seconds')::interval AS data_hora_postagem,
+    (gs % 2 = 0) AS is_online
+FROM generate_series(1, 500000) gs
+         CROSS JOIN tot t
+         JOIN videos v
+              ON v.rn = ((gs - 1) % t.total_videos) + 1
+         JOIN usuarios u
+              ON u.rn = ((gs - 1) % t.total_users) + 1;
+
+WITH comentarios AS (
+    SELECT
+                ROW_NUMBER() OVER () AS rn,
+                id_comentario,
+                id_plataforma,
+                id_video,
+                nick_usuario
+    FROM Comentario
+),
+     selecionados AS (
+         SELECT *
+         FROM comentarios
+         WHERE rn % 2 = 0        -- 50% dos comentários
+     )
+INSERT INTO Doacao (
+    id_doacao,
+    id_comentario,
+    id_plataforma,
+    id_video,
+    nick_usuario,
+    valor,
+    status_doacao
+)
+SELECT
+    rn AS id_doacao,
+    id_comentario,
+    id_plataforma,
+    id_video,
+    nick_usuario,
+    ROUND( (1 + random()*499)::numeric, 2 ) AS valor,
+    CASE (rn % 3)
+        WHEN 0 THEN 'recebido'
+        WHEN 1 THEN 'lido'
+        ELSE 'recusado'
+        END AS status_doacao
+FROM selecionados;
+
+
+WITH d AS (
+    SELECT
+                ROW_NUMBER() OVER () AS rn,
+                id_doacao, id_comentario, id_plataforma, id_video, nick_usuario
+    FROM Doacao
+)
+INSERT INTO DoacaoBitcoin (
+    id_doacao, id_comentario, id_plataforma, id_video, nick_usuario, txid
+)
+SELECT
+    id_doacao, id_comentario, id_plataforma, id_video, nick_usuario,
+    md5(random()::text || now()::text) AS txid
+FROM d
+WHERE rn BETWEEN 1 AND 25000;
+
+WITH d AS (
+    SELECT
+                ROW_NUMBER() OVER () AS rn,
+                id_doacao, id_comentario, id_plataforma, id_video, nick_usuario
+    FROM Doacao
+)
+INSERT INTO DoacaoPaypal (
+    id_doacao, id_comentario, id_plataforma, id_video, nick_usuario, id_paypal
+)
+SELECT
+    id_doacao, id_comentario, id_plataforma, id_video, nick_usuario,
+    'PAYPAL_' || md5(random()::text)
+FROM d
+WHERE rn BETWEEN 25001 AND 100000;
+
+WITH d AS (
+    SELECT
+                ROW_NUMBER() OVER () AS rn,
+                id_doacao, id_comentario, id_plataforma, id_video, nick_usuario
+    FROM Doacao
+)
+INSERT INTO DoacaoCartao (
+    id_doacao, id_comentario, id_plataforma, id_video, nick_usuario,
+    numero_cartao, bandeira, data_transacao
+)
+SELECT
+    id_doacao, id_comentario, id_plataforma, id_video, nick_usuario,
+    LPAD((floor(random()*9999999999999999))::text, 16, '0') AS numero_cartao,
+    (ARRAY['Visa','Mastercard','Amex','Elo','Discover'])[(rn % 5)+1] AS bandeira,
+    NOW() - (rn || ' seconds')::interval AS data_transacao
+FROM d
+WHERE rn BETWEEN 100001 AND 225000;
+
+WITH d AS (
+    SELECT
+                ROW_NUMBER() OVER () AS rn,
+                id_doacao, id_comentario, id_plataforma, id_video, nick_usuario
+    FROM Doacao
+)
+INSERT INTO DoacaoMecanismoPlat (
+    id_doacao, id_comentario, id_plataforma, id_video, nick_usuario, seq_plataforma
+)
+SELECT
+    id_doacao, id_comentario, id_plataforma, id_video, nick_usuario,
+    rn  -- já garante unicidade
+FROM d
+WHERE rn BETWEEN 225001 AND 250000;
