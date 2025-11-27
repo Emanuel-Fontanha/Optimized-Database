@@ -324,7 +324,6 @@ CREATE TABLE DoacaoCartao (
     bandeira VARCHAR(30) NOT NULL,
     data_transacao TIMESTAMP NOT NULL,
 
-    CONSTRAINT unq_cartao UNIQUE (numero_cartao, bandeira),
     CONSTRAINT pk_doacao_cartao
         PRIMARY KEY (id_doacao, id_comentario, id_plataforma, id_video, nick_usuario),
     CONSTRAINT fk_doacao_cartao
