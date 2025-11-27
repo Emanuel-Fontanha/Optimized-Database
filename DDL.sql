@@ -178,9 +178,9 @@ CREATE TABLE Patrocinio (
 CREATE TABLE Inscricao (
     nome_canal VARCHAR(50),
     id_plataforma INT,
-    nick_membro VARCHAR(50),
-    id_usuario BIGINT, --nick_membro removido já que foi criado ID
-    nivel INT,
+    nick_membro VARCHAR(50) NOT NULL,
+    id_usuario BIGINT,
+    nivel INT NOT NULL,
 
     CHECK (nivel BETWEEN 1 AND 5),
     CONSTRAINT pk_inscricao
@@ -196,11 +196,9 @@ CREATE TABLE Inscricao (
         ON UPDATE CASCADE
 );
 
--- NÃO MEXER DAQUI PRA CIMA
-
 CREATE TABLE Video (
     id_video BIGINT, -- NOVO
-    nome_canal VARCHAR(50),
+    nome_canal VARCHAR(50) NOT NULL,
     id_plataforma INT,
     titulo VARCHAR (50),
     data_hora TIMESTAMP,
@@ -221,17 +219,14 @@ CREATE TABLE Video (
 
 CREATE TABLE Colaboracao (
     id_video BIGINT, -- NOVO
-    nome_canal VARCHAR(50),
     id_plataforma INT,
-    titulo_video VARCHAR (50),
-    data_hora_vid TIMESTAMP,
     nick_streamer VARCHAR(50),
 
     CONSTRAINT pk_colab
-        PRIMARY KEY (id_plataforma, id_video, nick_streamer), -- NOVO
+        PRIMARY KEY (id_video, id_plataforma, nick_streamer), -- NOVO
     CONSTRAINT fk_video_colab -- NOVO
-        FOREIGN KEY (nome_canal, id_plataforma, id_video, titulo_video, data_hora_vid)
-        REFERENCES Video(nome_canal, id_plataforma, id_video, titulo, data_hora)
+        FOREIGN KEY (id_plataforma, id_video)
+        REFERENCES Video(id_plataforma, id_video)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CONSTRAINT fk_streamer_colab
@@ -242,22 +237,19 @@ CREATE TABLE Colaboracao (
 );
 
 CREATE TABLE Comentario (
-    id_video BIGINT, -- NOVO
-    nome_canal VARCHAR(50),
+    id_comentario BIGINT,
     id_plataforma INT,
-    titulo_video VARCHAR (50),
-    data_hora_vid TIMESTAMP,
+    id_video BIGINT, -- NOVO
     nick_usuario VARCHAR(50),
-    id_comentario INT,
-    texto VARCHAR(200),
-    data_hora_postagem TIMESTAMP,
+    texto VARCHAR(200) NOT NULL,
+    data_hora_postagem TIMESTAMP NOT NULL,
     is_online BOOLEAN,
 
     CONSTRAINT pk_comentario
-        PRIMARY KEY (id_plataforma, id_video, nick_usuario, id_comentario), -- NOVO
+        PRIMARY KEY (id_comentario, id_plataforma, id_video, nick_usuario), -- NOVO
     CONSTRAINT fk_video_comentado -- NOVO
-        FOREIGN KEY (nome_canal, id_plataforma, id_video, titulo_video, data_hora_vid)
-        REFERENCES Video(nome_canal, id_plataforma, id_video, titulo, data_hora)
+        FOREIGN KEY (id_plataforma, id_video)
+        REFERENCES Video(id_plataforma, id_video)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CONSTRAINT fk_usuario_coment
@@ -268,226 +260,94 @@ CREATE TABLE Comentario (
 );
 
 CREATE TABLE Doacao (
-    nome_canal VARCHAR(50),
+    id_doacao BIGINT,
+    id_comentario BIGINT,
     id_plataforma INT,
-    titulo_video VARCHAR (50),
-    data_hora_vid TIMESTAMP,
+    id_video BIGINT, -- NOVO
     nick_usuario VARCHAR(50),
-    id_comentario INT,
-    id_doacao INT,
     valor NUMERIC(10,2) NOT NULL,
     status_doacao VARCHAR(10) NOT NULL,
 
     CHECK (status_doacao IN ('recusado','recebido','lido')),
-    CONSTRAINT unq_id_doacao UNIQUE (id_comentario, id_doacao),
     CONSTRAINT pk_doacao
-        PRIMARY KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao),
+        PRIMARY KEY (id_doacao, id_comentario, id_plataforma, id_video, nick_usuario),
     CONSTRAINT fk_coment_doacao
-        FOREIGN KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario)
-        REFERENCES Comentario(nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario)
+        FOREIGN KEY (id_comentario, id_plataforma, id_video, nick_usuario)
+        REFERENCES Comentario(id_comentario, id_plataforma, id_video, nick_usuario)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
 
 CREATE TABLE DoacaoBitcoin (
-    nome_canal VARCHAR(50),
+    id_doacao BIGINT,
+    id_comentario BIGINT,
     id_plataforma INT,
-    titulo_video VARCHAR (50),
-    data_hora_vid TIMESTAMP,
-    nick_usuario VARCHAR(50),
-    id_comentario INT,
-    id_doacao INT,
-    txid VARCHAR(256) UNIQUE NOT NULL,
-
-    CONSTRAINT pk_doac_bitcoin
-        PRIMARY KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao),
-    CONSTRAINT fk_doac_bitcoin
-        FOREIGN KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao)
-        REFERENCES Doacao(nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
-
-CREATE TABLE DoacaoPaypal (
-    nome_canal VARCHAR(50),
-    id_plataforma INT,
-    titulo_video VARCHAR (50),
-    data_hora_vid TIMESTAMP,
-    nick_usuario VARCHAR(50),
-    id_comentario INT,
-    id_doacao INT,
-    id_paypal VARCHAR(100) UNIQUE NOT NULL,
-
-    CONSTRAINT pk_doac_paypal
-        PRIMARY KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao),
-    CONSTRAINT fk_doac_paypal
-        FOREIGN KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao)
-        REFERENCES Doacao(nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
-
-CREATE TABLE DoacaoCartao (
-    nome_canal VARCHAR(50),
-    id_plataforma INT,
-    titulo_video VARCHAR (50),
-    data_hora_vid TIMESTAMP,
-    nick_usuario VARCHAR(50),
-    id_comentario INT,
-    id_doacao INT,
-    numero_cartao VARCHAR(20) UNIQUE NOT NULL,
-    bandeira VARCHAR(30) NOT NULL,
-    data_transacao TIMESTAMP NOT NULL,
-
-    CONSTRAINT pk_doac_cartao
-        PRIMARY KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao),
-    CONSTRAINT fk_doac_cartao
-        FOREIGN KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao)
-        REFERENCES Doacao(nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
-
-CREATE TABLE DoacaoMecanismoPlat (
-    nome_canal VARCHAR(50),
-    id_plataforma INT,
-    titulo_video VARCHAR (50),
-    data_hora_vid TIMESTAMP,
-    nick_usuario VARCHAR(50),
-    id_comentario INT,
-    id_doacao INT,
-    seq_plataforma INT NOT NULL,
-
-    CONSTRAINT unq_sequencial UNIQUE (id_plataforma, nick_usuario, id_comentario, seq_plataforma),
-    CONSTRAINT pk_doac_mec_plat
-        PRIMARY KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao),
-    CONSTRAINT fk_doac_mec_plat
-        FOREIGN KEY (nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao)
-        REFERENCES Doacao(nome_canal, id_plataforma, titulo_video, data_hora_vid, nick_usuario, id_comentario, id_doacao)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
-
-
----------------------------------------------------------------------------------------------------------------------------------
-
-
-CREATE TABLE Video (
     id_video BIGINT, -- NOVO
-    nome_canal VARCHAR(50),
-    id_plataforma INT,
-    titulo VARCHAR (50),
-    data_hora TIMESTAMP,
-    tema VARCHAR(50),
-    duracao VARCHAR(10),
-    visus_simultaneas INT DEFAULT 0,
-    visus_totais INT DEFAULT 0,
+    nick_usuario VARCHAR(50),
+    txid VARCHAR(256) NOT NULL,
 
-    CONSTRAINT unq_titulo UNIQUE (nome_canal, id_plataforma, titulo),
-    CONSTRAINT pk_video
-        PRIMARY KEY (id_plataforma, id_video), -- NOVO
-    CONSTRAINT fk_canal_video
-        FOREIGN KEY (nome_canal, id_plataforma)
-            REFERENCES Canal(nome, id_plataforma)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE
-);
-
-CREATE TABLE Colaboracao (
-    id_video BIGINT,
-    id_plataforma INT,
-    nick_streamer VARCHAR(50),
-    CONSTRAINT pk_colab
-        PRIMARY KEY (id_plataforma, id_video, nick_streamer),
-    CONSTRAINT fk_video_colab
-        FOREIGN KEY (id_plataforma, id_video)
-            REFERENCES Video(id_plataforma, id_video)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE,
-    CONSTRAINT fk_streamer_colab
-        FOREIGN KEY (nick_streamer)
-            REFERENCES Usuario(nick)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE
-);
-
-CREATE TABLE Comentario (
-    id_comentario BIGINT PRIMARY KEY,
-    id_plataforma INT NOT NULL,
-    id_video BIGINT NOT NULL,
-    nick_usuario VARCHAR(50) NOT NULL,
-    texto VARCHAR(200),
-    data_hora_postagem TIMESTAMP,
-    is_online BOOLEAN,
-
-    CONSTRAINT fk_video_coment
-        FOREIGN KEY (id_plataforma, id_video)
-            REFERENCES Video(id_plataforma, id_video)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE,
-
-    CONSTRAINT fk_usr_coment
-        FOREIGN KEY (nick_usuario)
-            REFERENCES Usuario(nick)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE
-);
-
-CREATE TABLE Doacao (
-    id_doacao BIGINT PRIMARY KEY,
-    id_comentario BIGINT NOT NULL,
-    valor NUMERIC(10,2) NOT NULL,
-    status_doacao VARCHAR(10) NOT NULL CHECK (status_doacao IN ('recusado','recebido','lido')),
-
-    CONSTRAINT fk_coment_doacao
-        FOREIGN KEY (id_comentario)
-            REFERENCES Comentario(id_comentario)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE
-);
-
-CREATE TABLE DoacaoBitcoin (
-    id_doacao BIGINT PRIMARY KEY,
-    txid VARCHAR(256) UNIQUE NOT NULL,
-
-    FOREIGN KEY (id_doacao)
-        REFERENCES Doacao(id_doacao)
+    UNIQUE (txid),
+    CONSTRAINT pk_doacao_bictoin
+        PRIMARY KEY (id_doacao, id_comentario, id_plataforma, id_video, nick_usuario),
+    CONSTRAINT fk_doacao_bitcoin
+        FOREIGN KEY (id_doacao, id_comentario, id_plataforma, id_video, nick_usuario)
+        REFERENCES Doacao(id_doacao, id_comentario, id_plataforma, id_video, nick_usuario)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
 
 CREATE TABLE DoacaoPaypal (
-    id_doacao BIGINT PRIMARY KEY,
-    id_paypal VARCHAR(100) UNIQUE NOT NULL,
+    id_doacao BIGINT,
+    id_comentario BIGINT,
+    id_plataforma INT,
+    id_video BIGINT, -- NOVO
+    nick_usuario VARCHAR(50),
+    id_paypal VARCHAR(100) NOT NULL,
 
-    CONSTRAINT fk_doac_paypal
-        FOREIGN KEY (id_doacao)
-            REFERENCES Doacao(id_doacao)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE
+    UNIQUE (id_paypal),
+    CONSTRAINT pk_doacao_paypal
+        PRIMARY KEY (id_doacao, id_comentario, id_plataforma, id_video, nick_usuario),
+    CONSTRAINT fk_doacao_paypal
+        FOREIGN KEY (id_doacao, id_comentario, id_plataforma, id_video, nick_usuario)
+        REFERENCES Doacao(id_doacao, id_comentario, id_plataforma, id_video, nick_usuario)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 
 CREATE TABLE DoacaoCartao (
-    id_doacao BIGINT PRIMARY KEY,
-    numero_cartao VARCHAR(20) UNIQUE NOT NULL,
+    id_doacao BIGINT,
+    id_comentario BIGINT,
+    id_plataforma INT,
+    id_video BIGINT, -- NOVO
+    nick_usuario VARCHAR(50),
+    numero_cartao VARCHAR(20) NOT NULL,
     bandeira VARCHAR(30) NOT NULL,
     data_transacao TIMESTAMP NOT NULL,
 
-    CONSTRAINT fk_doac_cartao
-        FOREIGN KEY (id_doacao)
-            REFERENCES Doacao(id_doacao)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE
+    CONSTRAINT unq_cartao UNIQUE (numero_cartao, bandeira),
+    CONSTRAINT pk_doacao_cartao
+        PRIMARY KEY (id_doacao, id_comentario, id_plataforma, id_video, nick_usuario),
+    CONSTRAINT fk_doacao_cartao
+        FOREIGN KEY (id_doacao, id_comentario, id_plataforma, id_video, nick_usuario)
+        REFERENCES Doacao(id_doacao, id_comentario, id_plataforma, id_video, nick_usuario)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 
 CREATE TABLE DoacaoMecanismoPlat (
-    id_doacao BIGINT PRIMARY KEY,
+    id_doacao BIGINT,
+    id_comentario BIGINT,
+    id_plataforma INT,
+    id_video BIGINT, -- NOVO
+    nick_usuario VARCHAR(50),
     seq_plataforma INT NOT NULL,
 
-    CONSTRAINT unq_mec_plat_doac UNIQUE (seq_plataforma),
-    CONSTRAINT fk_doac_mec_plat
-        FOREIGN KEY (id_doacao)
-            REFERENCES Doacao(id_doacao)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE
+    UNIQUE (seq_plataforma),
+    CONSTRAINT pk_doacao_mec_plat
+        PRIMARY KEY (id_doacao, id_comentario, id_plataforma, id_video, nick_usuario),
+    CONSTRAINT fk_doacao_mec_plat
+        FOREIGN KEY (id_doacao, id_comentario, id_plataforma, id_video, nick_usuario)
+        REFERENCES Doacao(id_doacao, id_comentario, id_plataforma, id_video, nick_usuario)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
