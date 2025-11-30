@@ -28,7 +28,7 @@ CREATE TABLE Plataforma (
 );
 
 CREATE TABLE Conversao (
-    id_moeda INT, --NOVO
+    id_moeda INT,
     sigla_moeda VARCHAR(5),
     nome_moeda VARCHAR(30) NOT NULL,
     fator_conver_to_dolar NUMERIC(10,4) NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE Conversao (
 CREATE TABLE Pais (
     ddi INT,
     nome_pais VARCHAR(50) NOT NULL,
-    id_moeda INT NOT NULL, -- removido a sigla, já que temos um ID artificial
+    id_moeda INT NOT NULL,
 
     CHECK (ddi > 0),
     PRIMARY KEY (ddi),
@@ -53,7 +53,7 @@ CREATE TABLE Pais (
 );
 
 CREATE TABLE Usuario (
-    id_usuario BIGINT, --NOVO
+    id_usuario BIGINT,
     nick VARCHAR(50) NOT NULL,
     email VARCHAR(100) NOT NULL,
     data_nasc DATE NOT NULL,
@@ -224,7 +224,7 @@ CREATE TABLE Inscricao (
 );
 
 CREATE TABLE Video (
-    id_video BIGINT, -- NOVO
+    id_video BIGINT,
     nome_canal VARCHAR(50) NOT NULL,
     id_plataforma INT,
     titulo VARCHAR (50),
@@ -236,7 +236,7 @@ CREATE TABLE Video (
 
     CONSTRAINT unq_titulo UNIQUE (nome_canal, id_plataforma, titulo),
     CONSTRAINT pk_video
-        PRIMARY KEY (id_plataforma, id_video), -- NOVO
+        PRIMARY KEY (id_plataforma, id_video),
     CONSTRAINT fk_canal_video
         FOREIGN KEY (nome_canal, id_plataforma)
         REFERENCES Canal(nome, id_plataforma)
@@ -285,13 +285,13 @@ CREATE TABLE Video (
 
 
 CREATE TABLE Colaboracao (
-    id_video BIGINT, -- NOVO
+    id_video BIGINT,
     id_plataforma INT,
     nick_streamer VARCHAR(50),
 
     CONSTRAINT pk_colab
-        PRIMARY KEY (id_video, id_plataforma, nick_streamer), -- NOVO
-    CONSTRAINT fk_video_colab -- NOVO
+        PRIMARY KEY (id_video, id_plataforma, nick_streamer),
+    CONSTRAINT fk_video_colab
         FOREIGN KEY (id_plataforma, id_video)
         REFERENCES Video(id_plataforma, id_video)
         ON DELETE CASCADE
@@ -306,15 +306,15 @@ CREATE TABLE Colaboracao (
 CREATE TABLE Comentario (
     id_comentario BIGINT,
     id_plataforma INT,
-    id_video BIGINT, -- NOVO
+    id_video BIGINT,
     nick_usuario VARCHAR(50),
     texto VARCHAR(200) NOT NULL,
     data_hora_postagem TIMESTAMP NOT NULL,
     is_online BOOLEAN,
 
     CONSTRAINT pk_comentario
-        PRIMARY KEY (id_comentario, id_plataforma, id_video, nick_usuario), -- NOVO
-    CONSTRAINT fk_video_comentado -- NOVO
+        PRIMARY KEY (id_comentario, id_plataforma, id_video, nick_usuario),
+    CONSTRAINT fk_video_comentado
         FOREIGN KEY (id_plataforma, id_video)
         REFERENCES Video(id_plataforma, id_video)
         ON DELETE CASCADE
@@ -330,7 +330,7 @@ CREATE TABLE Doacao (
     id_doacao BIGINT,
     id_comentario BIGINT,
     id_plataforma INT,
-    id_video BIGINT, -- NOVO
+    id_video BIGINT,
     nick_usuario VARCHAR(50),
     valor NUMERIC(10,2) NOT NULL,
     status_doacao VARCHAR(10) NOT NULL,
@@ -349,7 +349,7 @@ CREATE TABLE DoacaoBitcoin (
     id_doacao BIGINT,
     id_comentario BIGINT,
     id_plataforma INT,
-    id_video BIGINT, -- NOVO
+    id_video BIGINT,
     nick_usuario VARCHAR(50),
     txid VARCHAR(256) NOT NULL,
 
@@ -367,7 +367,7 @@ CREATE TABLE DoacaoPaypal (
     id_doacao BIGINT,
     id_comentario BIGINT,
     id_plataforma INT,
-    id_video BIGINT, -- NOVO
+    id_video BIGINT,
     nick_usuario VARCHAR(50),
     id_paypal VARCHAR(100) NOT NULL,
 
@@ -385,7 +385,7 @@ CREATE TABLE DoacaoCartao (
     id_doacao BIGINT,
     id_comentario BIGINT,
     id_plataforma INT,
-    id_video BIGINT, -- NOVO
+    id_video BIGINT,
     nick_usuario VARCHAR(50),
     numero_cartao VARCHAR(20) NOT NULL,
     bandeira VARCHAR(30) NOT NULL,
@@ -404,7 +404,7 @@ CREATE TABLE DoacaoMecanismoPlat (
     id_doacao BIGINT,
     id_comentario BIGINT,
     id_plataforma INT,
-    id_video BIGINT, -- NOVO
+    id_video BIGINT,
     nick_usuario VARCHAR(50),
     seq_plataforma INT NOT NULL,
 
