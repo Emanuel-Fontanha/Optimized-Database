@@ -111,14 +111,13 @@ ORDER BY total_doacoes DESC;
 
 
 -- 8
--- explain (analyse , buffers )
 SELECT
     resultado.nome_canal,
     resultado.id_plataforma,
     SUM(resultado.faturamento) AS faturamento_total
 FROM (
 
-    -- 1. Receita de patrocínios
+    -- 1. Receita dos patrocínios
     SELECT
         p.nome_canal,
         p.id_plataforma,
@@ -128,7 +127,7 @@ FROM (
 
     UNION ALL
 
-    -- 2. Receita de membros (inscrição)
+    -- 2. Receita dos membros
     SELECT
         i.nome_canal,
         i.id_plataforma,
@@ -142,7 +141,7 @@ FROM (
 
     UNION ALL
 
-    -- 3. Receita de doações recebidas (precisa JOIN até Canal!)
+    -- 3. Receita de doações recebidas
     SELECT
         c.nome AS nome_canal,
         c.id_plataforma,
@@ -150,9 +149,9 @@ FROM (
     FROM Doacao d
     JOIN Comentario cm
         ON cm.id_comentario = d.id_comentario
-        AND cm.id_plataforma  = d.id_plataforma
-        AND cm.id_video       = d.id_video
-        AND cm.nick_usuario   = d.nick_usuario
+        AND cm.id_plataforma = d.id_plataforma
+        AND cm.id_video = d.id_video
+        AND cm.nick_usuario = d.nick_usuario
     JOIN Video v
         ON v.id_video = cm.id_video
         AND v.id_plataforma = cm.id_plataforma
