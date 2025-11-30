@@ -149,23 +149,33 @@ CROSS JOIN generate_series(1, 5) AS lvl;
 -- PATROCINIO ---------------------------------------------------------------------------------
 ---------------------
 
-WITH
-    canais AS (SELECT nome, id_plataforma FROM Canal),
-    empresas AS (SELECT id_empresa FROM Empresa)
+WITH 
+    canais AS (
+        SELECT nome, id_plataforma, row_number() OVER () AS rn
+        FROM Canal
+    ),
+    empresas AS (
+        SELECT id_empresa, row_number() OVER () AS rn
+        FROM Empresa
+    ),
+    distrib AS (
+        SELECT
+            c.nome AS nome_canal,
+            c.id_plataforma,
+            e.id_empresa
+        FROM canais c
+        JOIN empresas e
+            ON ((c.rn - 1) % (SELECT COUNT(*) FROM Empresa)) + 1 = e.rn
+    )
 INSERT INTO Patrocinio (id_empresa, nome_canal, id_plataforma, valor)
 SELECT
-    e.id_empresa,
-    c.nome AS nome_canal,
-    c.id_plataforma,
+    id_empresa,
+    nome_canal,
+    id_plataforma,
     (random() * 500 + 50)::NUMERIC(10,2) AS valor
-FROM canais c
-JOIN LATERAL (
-    SELECT id_empresa
-    FROM empresas
-    ORDER BY random()
-    LIMIT (1 + (random()*3)::int)
-) e ON true
-WHERE random() < 0.7; -- somente 70% dos canais terão patrocínio
+FROM distrib
+WHERE random() < 0.7;
+
 
 ---------------------
 -- INSCRIÇÃO -----------------------------------------------------------------------------------
