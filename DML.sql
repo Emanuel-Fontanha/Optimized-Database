@@ -69,7 +69,7 @@ INSERT INTO PlataformaUsuario (id_plataforma, id_usuario, numero_usuario, nick_u
 SELECT
     p.id_plataforma,
     u.id_usuario,
-    u.id_usuario AS numero_usuario, -- <== gera pelo próprio id
+    u.id_usuario AS numero_usuario,
     'user_' || u.id_usuario AS nick_usuario
 FROM (
         SELECT id_usuario,
@@ -206,7 +206,7 @@ SELECT
     aux AS id_video,
     c.nome AS nome_canal,
     c.id_plataforma AS id_plataforma,
-    'Video_' || aux || '_' || c.rn AS titulo,   -- garante UNIQUE por canal
+    'Video_' || aux || '_' || c.rn AS titulo,
     (TIMESTAMP '2020-01-01' + (aux % 2000) * INTERVAL '1 hour') AS data_hora,
     (ARRAY['Esporte','Música','Tecnologia','Educação','Entretenimento'])[1 + (aux % 5)] AS tema,
     (FLOOR(random() * 120) + 1)::text || ' min' AS duracao,
