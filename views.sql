@@ -51,3 +51,14 @@
     JOIN Video v USING (id_video, id_plataforma)
     JOIN Canal c ON c.nome = v.nome_canal AND c.id_plataforma = v.id_plataforma
     GROUP BY c.nome, c.id_plataforma;
+
+-- View 04: patrocinio_canal, favorece a Q5
+
+    CREATE MATERIALIZED VIEW vw_patrocinio_canal AS
+    SELECT
+        p.nome_canal,
+        p.id_plataforma,
+        SUM(p.valor) AS total_patrocinio
+    FROM Patrocinio p
+    GROUP BY p.nome_canal, p.id_plataforma;
+

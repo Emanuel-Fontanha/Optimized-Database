@@ -1,3 +1,9 @@
+-- Nova consulta 1:
+
+    SELECT *
+    FROM vw_total_patrocinio_canal
+    ORDER BY total_patrocinio DESC;
+
 -- Nova consulta 2:
 
     SELECT
