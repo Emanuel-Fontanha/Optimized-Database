@@ -1,4 +1,4 @@
--- function da Q1: fn_canais_patrocinados() (explicar 229)
+-- function da Q1: fn_canais_patrocinados()
 
     CREATE OR REPLACE FUNCTION fn_canais_patrocinados(p_id_empresa INT)
     RETURNS TABLE (
@@ -20,7 +20,7 @@
         JOIN Empresa e ON p.id_empresa = e.id_empresa
         WHERE p.id_empresa = p_id_empresa
         GROUP BY e.nome_empresa, p.nome_canal, p.id_plataforma
-        ORDER BY e.nome_empresa, p.id_plataforma, p.nome_canal;
+        ORDER BY total_pago DESC;
     END;
     $$;
 
