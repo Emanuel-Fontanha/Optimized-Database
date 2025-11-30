@@ -250,7 +250,7 @@ CREATE TABLE Video (
     CREATE OR REPLACE FUNCTION fn_trg_atualizar_qtd_visualizacoes()
     RETURNS TRIGGER AS $$
     DECLARE
-        canal_nome TEXT;
+        canal_nome VARCHAR(50);
         plataforma_id INT;
     BEGIN
         IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
@@ -263,12 +263,12 @@ CREATE TABLE Video (
 
         UPDATE Canal c
         SET qtd_visualizacoes = (
-            SELECT COALESCE(SUM(v.qtd_visualizacoes),0)
+            SELECT COALESCE(SUM(v.visus_totais), 0)
             FROM Video v
-            WHERE v.nome_canal = c.nome_canal
+            WHERE v.nome_canal = c.nome
                 AND v.id_plataforma = c.id_plataforma
         )
-        WHERE c.nome_canal = canal_nome 
+        WHERE c.nome = canal_nome
             AND c.id_plataforma = plataforma_id;
 
         RETURN NULL;
