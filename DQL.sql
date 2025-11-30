@@ -12,9 +12,7 @@ GROUP BY
     p.nome_canal,
     p.id_plataforma
 ORDER BY
-    e.nome_empresa,
-    p.id_plataforma,
-    p.nome_canal;
+    total_pago DESC;
 
 
 -- 2
