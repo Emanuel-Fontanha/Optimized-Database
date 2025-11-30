@@ -9,7 +9,6 @@
     JOIN NivelCanal nc USING (nome_canal, id_plataforma, nivel)
     GROUP BY i.id_usuario;
 
-
 -- View 02: faturamento_canal, favorece Q8
 
     CREATE MATERIALIZED VIEW vw_faturamento_canal AS
@@ -52,19 +51,3 @@
     JOIN Video v USING (id_video, id_plataforma)
     JOIN Canal c ON c.nome = v.nome_canal AND c.id_plataforma = v.id_plataforma
     GROUP BY c.nome, c.id_plataforma;
-
--- View 04: aportes_por_canal, favorece Q6
-
-    CREATE VIEW vw_aportes_por_canal AS
-    SELECT
-        i.nome_canal,
-        i.id_plataforma,
-        SUM(nc.valor) AS total_aportes
-    FROM Inscricao i
-    JOIN NivelCanal nc
-        ON nc.nome_canal = i.nome_canal
-        AND nc.id_plataforma = i.id_plataforma
-        AND nc.nivel = i.nivel
-    GROUP BY
-        i.nome_canal,
-        i.id_plataforma;

@@ -33,13 +33,3 @@
     FROM vw_faturamento_canal
     ORDER BY faturamento_total DESC
     LIMIT 100;
-
--- Nova consulta 6:
-
-    SELECT
-        nome_canal,
-        id_plataforma,
-        total_aportes
-    FROM vw_aportes_por_canal
-    ORDER BY total_aportes DESC;
-
