@@ -87,6 +87,33 @@ CREATE TABLE PlataformaUsuario (
         ON UPDATE CASCADE
 );
 
+
+-- trigger function 01: fn_trg_atualizar_qtd_usuarios()
+
+    CREATE OR REPLACE FUNCTION fn_trg_atualizar_qtd_usuarios()
+    RETURNS TRIGGER AS $$
+    BEGIN
+        UPDATE Plataforma p
+        SET qtd_usuarios = (
+            SELECT COUNT(*)
+            FROM PlataformaUsuario pu
+            WHERE pu.id_plataforma = p.id_plataforma
+        )
+        WHERE p.id_plataforma = COALESCE(NEW.id_plataforma, OLD.id_plataforma);
+
+        RETURN NULL;
+    END;
+    $$ LANGUAGE plpgsql;
+
+
+-- trigger definition 01: trg_atualizar_qtd_usuarios
+
+    CREATE TRIGGER trg_atualizar_qtd_usuarios
+    AFTER INSERT OR DELETE ON PlataformaUsuario
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_trg_atualizar_qtd_usuarios();
+
+
 CREATE TABLE StreamerPais (
     id_streamer BIGINT,
     ddi_pais_origem INT,
@@ -216,6 +243,46 @@ CREATE TABLE Video (
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
+
+
+-- trigger function 02: fn_trg_atualizar_qtd_visualizacoes()
+
+    CREATE OR REPLACE FUNCTION fn_trg_atualizar_qtd_visualizacoes()
+    RETURNS TRIGGER AS $$
+    DECLARE
+        canal_nome TEXT;
+        plataforma_id INT;
+    BEGIN
+        IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+            canal_nome := NEW.nome_canal;
+            plataforma_id := NEW.id_plataforma;
+        ELSIF TG_OP = 'DELETE' THEN
+            canal_nome := OLD.nome_canal;
+            plataforma_id := OLD.id_plataforma;
+        END IF;
+
+        UPDATE Canal c
+        SET qtd_visualizacoes = (
+            SELECT COALESCE(SUM(v.qtd_visualizacoes),0)
+            FROM Video v
+            WHERE v.nome_canal = c.nome_canal
+                AND v.id_plataforma = c.id_plataforma
+        )
+        WHERE c.nome_canal = canal_nome 
+            AND c.id_plataforma = plataforma_id;
+
+        RETURN NULL;
+    END;
+    $$ LANGUAGE plpgsql;
+
+
+-- trigger definition 02: trg_atualizar_qtd_visualizacoes
+
+    CREATE TRIGGER trg_atualizar_qtd_visualizacoes
+    AFTER INSERT OR UPDATE OR DELETE ON Video
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_trg_atualizar_qtd_visualizacoes();
+
 
 CREATE TABLE Colaboracao (
     id_video BIGINT, -- NOVO
