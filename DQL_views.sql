@@ -1,9 +1,3 @@
--- Nova consulta 1:
-
-    SELECT *
-    FROM vw_total_patrocinio_canal
-    ORDER BY total_patrocinio DESC;
-
 -- Nova consulta 2:
 
     SELECT
@@ -19,6 +13,12 @@
     FROM vw_doacoes_por_canal
     WHERE total_doacoes > 0
     ORDER BY total_doacoes DESC;
+
+-- Nova consulta 5:
+
+    SELECT *
+    FROM vw_patrocinio_canal
+    ORDER BY total_patrocinio DESC;
 
 -- Nova consulta 7:
 
